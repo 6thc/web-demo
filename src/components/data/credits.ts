@@ -66,6 +66,18 @@ export const getCreditsForUserState = (userState: 'fresh' | 'active'): Credit[] 
   return userState === 'fresh' ? freshCreditsState : activeCreditsState;
 };
 
+// Module-private setter for the dual-state array
+const setCreditsState = (userState: 'fresh' | 'active', value: Credit[] | ((prev: Credit[]) => Credit[])): void => {
+  const resolved = typeof value === 'function'
+    ? value(userState === 'fresh' ? freshCreditsState : activeCreditsState)
+    : value;
+  if (userState === 'fresh') {
+    freshCreditsState = resolved;
+  } else {
+    activeCreditsState = resolved;
+  }
+};
+
 export const addPendingRequest = (requestData: {
   pledgerName: string;
   pledgerEmail: string;
@@ -145,17 +157,13 @@ export const addPendingRequest = (requestData: {
     numberOfInstallments: loanTerms.numberOfInstallments
   });
 
-  if (userState === 'fresh') {
-    freshCreditsState = [...freshCreditsState, newCredit];
-  } else {
-    activeCreditsState = [...activeCreditsState, newCredit];
-  }
+  setCreditsState(userState, prev => [...prev, newCredit]);
 
   return newCredit;
 };
 
 export const approvePendingRequest = (creditId: string, userState: 'fresh' | 'active' = 'active'): Credit | null => {
-  const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
+  const creditsState = getCreditsForUserState(userState);
   const creditIndex = creditsState.findIndex(credit => credit.id === creditId);
   if (creditIndex === -1) return null;
 
@@ -185,17 +193,17 @@ export const approvePendingRequest = (creditId: string, userState: 'fresh' | 'ac
     monthlyPaymentUSD: credit.installmentAmountUSD
   };
 
-  if (userState === 'fresh') {
-    freshCreditsState[creditIndex] = updatedCredit;
-  } else {
-    activeCreditsState[creditIndex] = updatedCredit;
-  }
+  setCreditsState(userState, prev => {
+    const copy = [...prev];
+    copy[creditIndex] = updatedCredit;
+    return copy;
+  });
 
   return updatedCredit;
 };
 
 export const declinePendingRequest = (creditId: string, userState: 'fresh' | 'active' = 'fresh'): Credit | null => {
-  const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
+  const creditsState = getCreditsForUserState(userState);
   const creditIndex = creditsState.findIndex(credit => credit.id === creditId);
   if (creditIndex === -1) return null;
 
@@ -207,11 +215,11 @@ export const declinePendingRequest = (creditId: string, userState: 'fresh' | 'ac
     status: 'cancelled' as const
   };
 
-  if (userState === 'fresh') {
-    freshCreditsState[creditIndex] = updatedCredit;
-  } else {
-    activeCreditsState[creditIndex] = updatedCredit;
-  }
+  setCreditsState(userState, prev => {
+    const copy = [...prev];
+    copy[creditIndex] = updatedCredit;
+    return copy;
+  });
 
   // Add pledger activity for the decline
   try {
@@ -235,8 +243,7 @@ export const declinePendingRequest = (creditId: string, userState: 'fresh' | 'ac
 
 export const approveAllPendingRequests = (userState: 'fresh' | 'active' = 'active'): Credit[] => {
   const approvedCredits: Credit[] = [];
-  const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
-  const pendingCredits = creditsState.filter(credit =>
+  const pendingCredits = getCreditsForUserState(userState).filter(credit =>
     credit.status === 'pending' || credit.status === 'reviewing'
   );
 
@@ -252,8 +259,7 @@ export const approveAllPendingRequests = (userState: 'fresh' | 'active' = 'activ
 
 export const declineAllPendingRequests = (userState: 'fresh' | 'active' = 'fresh'): Credit[] => {
   const declinedCredits: Credit[] = [];
-  const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
-  const pendingCredits = creditsState.filter(credit =>
+  const pendingCredits = getCreditsForUserState(userState).filter(credit =>
     credit.status === 'pending' || credit.status === 'reviewing'
   );
 
@@ -285,7 +291,7 @@ export const getTotalCreditBalance = (userState: 'fresh' | 'active'): number => 
 };
 
 export const lockFunds = (creditId: string, amountUSD: number, userState: 'fresh' | 'active' = 'active'): { success: boolean; error?: string } => {
-  const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
+  const creditsState = getCreditsForUserState(userState);
   const creditIndex = creditsState.findIndex(credit => credit.id === creditId);
 
   if (creditIndex === -1) {
@@ -330,7 +336,7 @@ const _applyPayment = (
     onCompletion?: (credit: Credit, creditId: string, userState: 'fresh' | 'active') => void;
   }
 ): { success: boolean; error?: string; paymentRecord?: PaymentRecord; updatedCredit?: Credit } => {
-  const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
+  const creditsState = getCreditsForUserState(userState);
   const creditIndex = creditsState.findIndex(credit => credit.id === creditId);
 
   if (creditIndex === -1) {
@@ -429,8 +435,7 @@ export const addLoanRepayment = (
 ): { success: boolean; error?: string; paymentRecord?: PaymentRecord } => {
   const paymentDate = customDate || new Date();
   const isFullPayment = ((): boolean => {
-    const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
-    const credit = creditsState.find(c => c.id === creditId);
+    const credit = getCreditsForUserState(userState).find(c => c.id === creditId);
     return credit ? amount >= credit.remaining : false;
   })();
 
