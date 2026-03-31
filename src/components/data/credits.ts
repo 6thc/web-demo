@@ -316,15 +316,20 @@ export const lockFunds = (creditId: string, amountUSD: number, userState: 'fresh
   }
 };
 
-export const addLoanRepayment = (
+// Private helper that contains the shared payment processing logic used by
+// both addLoanRepayment (populate flow) and processCreditPayment (UI flow).
+const _applyPayment = (
   creditId: string,
   amount: number,
   transactionId: string,
-  paymentType: 'regular' | 'full' | 'partial' = 'regular',
-  userState: 'fresh' | 'active' = 'active',
-  customDate?: Date
-): { success: boolean; error?: string; paymentRecord?: PaymentRecord } => {
-  // Get the correct credits array and work with it directly
+  paymentType: string,
+  userState: 'fresh' | 'active',
+  options?: {
+    customDate?: Date;
+    extraCreditFields?: Record<string, unknown>;
+    onCompletion?: (credit: Credit, creditId: string, userState: 'fresh' | 'active') => void;
+  }
+): { success: boolean; error?: string; paymentRecord?: PaymentRecord; updatedCredit?: Credit } => {
   const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
   const creditIndex = creditsState.findIndex(credit => credit.id === creditId);
 
@@ -337,20 +342,15 @@ export const addLoanRepayment = (
     return { success: false, error: 'Credit is not active' };
   }
 
-  // For new loan structure, payments are applied directly to remaining balance
-  // since totalToRepay already includes all interest calculated upfront
+  // Interest/principal split calculation
   const amountUSD = convertLocalToUSD(amount);
-
-  // For payment record breakdown, we can estimate interest vs principal
-  // based on the proportion of total interest to total loan amount
   const totalInterestProportion = credit.totalInterest ? credit.totalInterest / credit.totalToRepay : 0;
   const interestAmount = Math.round(amount * totalInterestProportion);
   const principalAmount = amount - interestAmount;
   const principalAmountUSD = convertLocalToUSD(principalAmount);
   const interestAmountUSD = convertLocalToUSD(interestAmount);
 
-  // Use custom date if provided, otherwise current date
-  const paymentDate = customDate || new Date();
+  const paymentDate = options?.customDate || new Date();
 
   // Create payment record
   const paymentRecord: PaymentRecord = {
@@ -362,7 +362,7 @@ export const addLoanRepayment = (
     date: paymentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
     time: paymentDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
     status: 'completed',
-    type: paymentType,
+    type: paymentType as PaymentRecord['type'],
     principalAmount: principalAmount,
     principalAmountUSD: principalAmountUSD,
     interestAmount: interestAmount,
@@ -370,51 +370,78 @@ export const addLoanRepayment = (
     reference: `LOAN${paymentDate.getFullYear()}${String(paymentDate.getMonth() + 1).padStart(2, '0')}${String(credit.paymentHistory.length + 1).padStart(3, '0')}`
   };
 
-  // Update credit - with new loan structure, we reduce remaining by full payment amount
+  // Update credit remaining and totalPaid
   const newRemaining = Math.max(0, credit.remaining - amount);
   const newRemainingUSD = convertLocalToUSD(newRemaining);
   const newTotalPaid = (credit.totalPaid || 0) + amount;
   const newTotalPaidUSD = convertLocalToUSD(newTotalPaid);
+  const isFullyPaid = newRemaining <= 0;
 
-  const updatedCredit = {
+  const updatedCredit: Credit = {
     ...credit,
     remaining: newRemaining,
     remainingUSD: newRemainingUSD,
     totalPaid: newTotalPaid,
     totalPaidUSD: newTotalPaidUSD,
     paymentHistory: [...credit.paymentHistory, paymentRecord],
-    status: newRemaining <= 0 ? 'completed' as const : credit.status,
-    completedDate: newRemaining <= 0 ? paymentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : credit.completedDate
-  };
+    status: isFullyPaid ? 'completed' : credit.status,
+    ...(options?.extraCreditFields || {}),
+  } as Credit;
 
-  // Update the credit in the correct state array
-  if (userState === 'fresh') {
-    freshCreditsState[creditIndex] = updatedCredit;
-  } else {
-    activeCreditsState[creditIndex] = updatedCredit;
-  }
+  // Persist to the correct state array
+  creditsState[creditIndex] = updatedCredit;
 
-  // If loan is completed, unlock collateral
-  if (newRemaining <= 0) {
-    try {
-      unlockFunds(creditId);
-      addPledgerActivity({
-        type: 'funds_unlocked',
-        title: 'Funds Unlocked',
-        description: 'Collateral released - loan fully repaid',
-        amount: credit.totalAmountUSD,
-        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-        time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-        status: 'completed',
-        borrowerName: 'Segun Adebayo',
-        creditId: creditId
-      }, userState);
-    } catch (error) {
-      console.warn('Failed to unlock funds or create activity:', error);
+  // If loan is fully paid, release collateral
+  if (isFullyPaid) {
+    if (options?.onCompletion) {
+      options.onCompletion(credit, creditId, userState);
+    } else {
+      // Default completion behaviour: unlock funds + pledger activity
+      try {
+        unlockFunds(creditId);
+        addPledgerActivity({
+          type: 'funds_unlocked',
+          title: 'Funds Unlocked',
+          description: 'Collateral released - loan fully repaid',
+          amount: credit.totalAmountUSD,
+          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+          time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+          status: 'completed',
+          borrowerName: 'Segun Adebayo',
+          creditId: creditId
+        }, userState);
+      } catch (error) {
+        console.warn('Failed to unlock funds or create activity:', error);
+      }
     }
   }
 
-  return { success: true, paymentRecord };
+  return { success: true, paymentRecord, updatedCredit };
+};
+
+export const addLoanRepayment = (
+  creditId: string,
+  amount: number,
+  transactionId: string,
+  paymentType: 'regular' | 'full' | 'partial' = 'regular',
+  userState: 'fresh' | 'active' = 'active',
+  customDate?: Date
+): { success: boolean; error?: string; paymentRecord?: PaymentRecord } => {
+  const paymentDate = customDate || new Date();
+  const isFullPayment = ((): boolean => {
+    const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
+    const credit = creditsState.find(c => c.id === creditId);
+    return credit ? amount >= credit.remaining : false;
+  })();
+
+  const result = _applyPayment(creditId, amount, transactionId, paymentType, userState, {
+    customDate,
+    extraCreditFields: isFullPayment
+      ? { completedDate: paymentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }
+      : {},
+  });
+
+  return { success: result.success, error: result.error, paymentRecord: result.paymentRecord };
 };
 
 // Additional utility functions needed by components
@@ -455,104 +482,32 @@ export const processCreditPayment = (
   transactionId: string,
   userState: 'fresh' | 'active' = 'active'
 ): { success: boolean; error?: string; updatedCredit?: Credit } => {
-  // Get the correct credits array
-  const creditsState = userState === 'fresh' ? freshCreditsState : activeCreditsState;
-  const creditIndex = creditsState.findIndex(credit => credit.id === creditId);
-
-  if (creditIndex === -1) {
-    return { success: false, error: 'Credit not found' };
-  }
-
-  const credit = creditsState[creditIndex];
-  if (credit.status !== 'active') {
-    return { success: false, error: 'Credit is not active' };
-  }
-
-  // For new loan structure, payments are applied directly to remaining balance
-  const amountUSD = convertLocalToUSD(amount);
-
-  // For payment record breakdown, estimate interest vs principal
-  const totalInterestProportion = credit.totalInterest ? credit.totalInterest / credit.totalToRepay : 0;
-  const interestAmount = Math.round(amount * totalInterestProportion);
-  const principalAmount = amount - interestAmount;
-  const principalAmountUSD = convertLocalToUSD(principalAmount);
-  const interestAmountUSD = convertLocalToUSD(interestAmount);
-
-  // Create payment record
-  const paymentRecord: PaymentRecord = {
-    id: `PAY${String(credit.paymentHistory.length + 1).padStart(3, '0')}`,
-    creditId: creditId,
-    transactionId: transactionId,
-    amount: amount,
-    amountUSD: amountUSD,
-    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-    time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-    status: 'completed',
-    type: paymentType,
-    principalAmount: principalAmount,
-    principalAmountUSD: principalAmountUSD,
-    interestAmount: interestAmount,
-    interestAmountUSD: interestAmountUSD,
-    reference: `LOAN${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(credit.paymentHistory.length + 1).padStart(3, '0')}`
-  };
-
-  // Update credit - with new loan structure, we reduce remaining by full payment amount
-  const newRemaining = Math.max(0, credit.remaining - amount);
-  const newRemainingUSD = convertLocalToUSD(newRemaining);
-  const newTotalPaid = (credit.totalPaid || 0) + amount;
-  const newTotalPaidUSD = convertLocalToUSD(newTotalPaid);
-
-  // Determine if loan is fully paid
-  const isFullyPaid = newRemaining <= 0;
-
-  const updatedCredit: Credit = {
-    ...credit,
-    remaining: newRemaining,
-    remainingUSD: newRemainingUSD,
-    totalPaid: newTotalPaid,
-    totalPaidUSD: newTotalPaidUSD,
-    status: isFullyPaid ? 'completed' : 'active',
-    paymentHistory: [...credit.paymentHistory, paymentRecord],
-    lastPaymentDate: paymentRecord.date
-  };
-
-  // Update the credit in the array
-  creditsState[creditIndex] = updatedCredit;
-
-  // If loan is fully paid, release the collateral
-  if (isFullyPaid) {
-    try {
-      const unlockResult = unlockFunds(creditId);
-      if (unlockResult.success) {
-        console.log(`Collateral released for loan ${creditId}`);
-
-        // Add pledger activity for collateral release
-        addPledgerActivity({
-          type: 'collateral_released',
-          title: 'Collateral Released',
-          description: `Collateral released - loan fully repaid by ${credit.pledgerName.split(' ')[1] || 'borrower'}`,
-          amount: credit.totalAmountUSD, // Amount that was locked (in USD)
-          date: new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          }),
-          time: new Date().toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          }),
-          status: 'completed',
-          borrowerName: 'Segun Adebayo',
-          creditId: creditId
-        }, userState);
-      } else {
-        console.warn(`Failed to release collateral for loan ${creditId}: ${unlockResult.error}`);
+  const result = _applyPayment(creditId, amount, transactionId, paymentType, userState, {
+    extraCreditFields: { lastPaymentDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) },
+    onCompletion: (credit, cId, uState) => {
+      try {
+        const unlockResult = unlockFunds(cId);
+        if (unlockResult.success) {
+          console.log(`Collateral released for loan ${cId}`);
+          addPledgerActivity({
+            type: 'collateral_released',
+            title: 'Collateral Released',
+            description: `Collateral released - loan fully repaid by ${credit.pledgerName.split(' ')[1] || 'borrower'}`,
+            amount: credit.totalAmountUSD,
+            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+            time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+            status: 'completed',
+            borrowerName: 'Segun Adebayo',
+            creditId: cId
+          }, uState);
+        } else {
+          console.warn(`Failed to release collateral for loan ${cId}: ${unlockResult.error}`);
+        }
+      } catch (error) {
+        console.error(`Error releasing collateral for loan ${cId}:`, error);
       }
-    } catch (error) {
-      console.error(`Error releasing collateral for loan ${creditId}:`, error);
-    }
-  }
+    },
+  });
 
-  return { success: true, updatedCredit };
+  return { success: result.success, error: result.error, updatedCredit: result.updatedCredit };
 };
