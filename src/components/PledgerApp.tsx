@@ -11,7 +11,6 @@ import { PledgerBottomNav } from "./PledgerBottomNav";
 import { Toaster } from "./ui/sonner";
 import { toast } from "sonner@2.0.3";
 import { initializeFreshWallet, initializeActiveWallet } from "./data/wallet";
-import { resetPledgerActivitiesToFresh, resetPledgerActivitiesToActive } from "./data/pledger-activity";
 
 interface PledgerAppProps {
   userState: 'fresh' | 'active';
@@ -41,16 +40,14 @@ export function PledgerApp({ userState, refreshKey, onRefresh, forceTab, forceCh
   const [localRefreshKey, setLocalRefreshKey] = useState(0);
 
   // Initialize wallet state when userState changes
+  // Note: reset functions are called by the parent via resetAllToFresh/Active.
+  // This effect only handles wallet initialization for the pledger phone.
   useEffect(() => {
     if (userState === 'fresh') {
       initializeFreshWallet();
-      resetPledgerActivitiesToFresh();
     } else {
       initializeActiveWallet();
-      resetPledgerActivitiesToActive();
     }
-    // Trigger a local refresh to update the UI with new wallet state
-    setLocalRefreshKey(prev => prev + 1);
   }, [userState]);
 
   const handleTopUp = () => {
