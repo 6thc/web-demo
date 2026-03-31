@@ -25,6 +25,18 @@ export const getPledgerActivitiesForUserState = (userState: 'fresh' | 'active'):
   return userState === 'fresh' ? freshActivitiesState : activeActivitiesState;
 };
 
+// Module-private setter for the dual-state array
+const setActivitiesState = (userState: 'fresh' | 'active', value: PledgerActivity[] | ((prev: PledgerActivity[]) => PledgerActivity[])): void => {
+  const resolved = typeof value === 'function'
+    ? value(userState === 'fresh' ? freshActivitiesState : activeActivitiesState)
+    : value;
+  if (userState === 'fresh') {
+    freshActivitiesState = resolved;
+  } else {
+    activeActivitiesState = resolved;
+  }
+};
+
 export const getRecentPledgerActivities = (userState: 'fresh' | 'active', limit: number = 5): PledgerActivity[] => {
   const activities = getPledgerActivitiesForUserState(userState);
   return activities.slice(0, limit);
@@ -36,11 +48,7 @@ export const addPledgerActivity = (activity: Omit<PledgerActivity, 'id'>, userSt
     id: `PA${String(nextActivityId++).padStart(3, '0')}`
   };
 
-  if (userState === 'fresh') {
-    freshActivitiesState = [newActivity, ...freshActivitiesState];
-  } else {
-    activeActivitiesState = [newActivity, ...activeActivitiesState];
-  }
+  setActivitiesState(userState, prev => [newActivity, ...prev]);
 
   return newActivity;
 };

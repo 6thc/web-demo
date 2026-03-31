@@ -49,6 +49,18 @@ export const getTransactionsForUserState = (userState: 'fresh' | 'active') => {
   return userState === 'fresh' ? freshTransactionsState : transactionsState;
 };
 
+// Module-private setter for the dual-state array
+const setTransactionsState = (userState: 'fresh' | 'active', value: Transaction[] | ((prev: Transaction[]) => Transaction[])): void => {
+  const resolved = typeof value === 'function'
+    ? value(userState === 'fresh' ? freshTransactionsState : transactionsState)
+    : value;
+  if (userState === 'fresh') {
+    freshTransactionsState = resolved;
+  } else {
+    transactionsState = resolved;
+  }
+};
+
 export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
@@ -124,11 +136,7 @@ export const addLoanDisbursementTransaction = (
   };
   
   // Add to appropriate state
-  if (userState === 'fresh') {
-    freshTransactionsState = [newTransaction, ...freshTransactionsState];
-  } else {
-    transactionsState = [newTransaction, ...transactionsState];
-  }
+  setTransactionsState(userState, prev => [newTransaction, ...prev]);
 
   // Add pledger activity for loan disbursement
   try {
@@ -230,11 +238,7 @@ export const addLoanRepaymentTransaction = (
   };
   
   // Add to appropriate state
-  if (userState === 'fresh') {
-    freshTransactionsState = [newTransaction, ...freshTransactionsState];
-  } else {
-    transactionsState = [newTransaction, ...transactionsState];
-  }
+  setTransactionsState(userState, prev => [newTransaction, ...prev]);
 
   // Note: Credit payment processing is handled separately by the calling code
   // to avoid duplicate payment records and maintain proper error handling
@@ -365,12 +369,8 @@ export const addCashTransaction = (
   };
   
   // Add to appropriate state
-  if (userState === 'fresh') {
-    freshTransactionsState = [newTransaction, ...freshTransactionsState];
-  } else {
-    transactionsState = [newTransaction, ...transactionsState];
-  }
-  
+  setTransactionsState(userState, prev => [newTransaction, ...prev]);
+
   return {
     success: true,
     transaction: newTransaction,
@@ -424,12 +424,8 @@ export const addTransferTransaction = (
   };
   
   // Add to appropriate state
-  if (userState === 'fresh') {
-    freshTransactionsState = [newTransaction, ...freshTransactionsState];
-  } else {
-    transactionsState = [newTransaction, ...transactionsState];
-  }
-  
+  setTransactionsState(userState, prev => [newTransaction, ...prev]);
+
   return {
     success: true,
     transaction: newTransaction,
