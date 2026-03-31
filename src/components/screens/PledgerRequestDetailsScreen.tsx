@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, User, AlertCircle, Shield, Banknote, Calendar, MapPin, Phone, Mail, Heart, Copy, Share, Download, History, CheckCircle, Clock, ArrowUpRight, ArrowDownLeft, Plus, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -709,13 +710,28 @@ export function PledgerRequestDetailsScreen({ creditId, onBack, onApproved, onDe
             {isProcessing ? 'Processing...' : `Approve & Pledge ${formatCurrency(collateralRequired)}`}
           </Button>
           
-          <Button 
-            onClick={handleDecline}
-            disabled={isProcessing}
-            className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            {isProcessing ? 'Processing...' : 'Decline Request'}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                disabled={isProcessing}
+                className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {isProcessing ? 'Processing...' : 'Decline Request'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Decline this request?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will reject the loan request. The borrower will be notified and will need to submit a new request.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDecline}>Decline</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </div>

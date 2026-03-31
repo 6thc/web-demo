@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
 import { SmartphoneContainer } from "./components/SmartphoneContainer";
 import { BottomNav } from "./components/BottomNav";
 import { HomeScreen } from "./components/screens/HomeScreen";
@@ -963,14 +964,29 @@ export default function App() {
           <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-white/90 text-gray-600 px-3 py-2 rounded-lg shadow-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
             Reset to fresh user
           </div>
-          <Button
-            onClick={handleResetToFreshUser}
-            disabled={isPopulating}
-            className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 shadow-lg transition-all duration-200 disabled:opacity-50"
-            variant="ghost"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                disabled={isPopulating}
+                className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 shadow-lg transition-all duration-200 disabled:opacity-50"
+                variant="ghost"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset demo data?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will clear all transaction history, loan data, and wallet balances. The demo will return to a fresh state.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetToFreshUser}>Reset</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* Populate Activity Button */}
