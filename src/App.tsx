@@ -27,8 +27,16 @@ import { resetAllToFresh } from "./components/data/reset";
 import { topUpWallet, lockFunds } from "./components/data/wallet";
 import toposLogo from 'figma:asset/4b031171cb67357b991e3d5c9c7dd0b75de1bf28.png';
 
+// Re-entrancy guard for populate function
+let isPopulateRunning = false;
+
 // Progressive function to populate with realistic activity - runs step by step with visual feedback
 async function buildActivityHistoryProgressively(onRefresh: () => void, notificationsEnabled: boolean = true) {
+  if (isPopulateRunning) {
+    console.warn('Populate already running, ignoring duplicate call');
+    return;
+  }
+  isPopulateRunning = true;
   try {
     console.log('🚀 Starting progressive activity history build...');
     
@@ -360,10 +368,11 @@ async function buildActivityHistoryProgressively(onRefresh: () => void, notifica
       });
     }
     
-    // Reset to fresh state on error
+    // Reset to fresh state on error — leave app in clean state
     resetAllToFresh();
     onRefresh();
-    throw error;
+  } finally {
+    isPopulateRunning = false;
   }
 }
 
