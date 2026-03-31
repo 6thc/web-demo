@@ -8,6 +8,7 @@ import { toast } from "sonner@2.0.3";
 import { Button } from "./components/ui/button";
 import { RotateCcw, Database, Bell, BellOff, List, ListX } from "lucide-react";
 import { AuditTrail } from "./components/AuditTrail";
+import { DemoContext } from "./components/DemoContext";
 import { resetAllToFresh } from "./components/data/reset";
 import { buildActivityHistoryProgressively } from "./components/data/demo-data";
 import toposLogo from 'figma:asset/4b031171cb67357b991e3d5c9c7dd0b75de1bf28.png';
@@ -124,6 +125,15 @@ export default function App() {
   };
 
   return (
+    <DemoContext.Provider value={{
+      userState,
+      setUserState,
+      refreshKey,
+      onRefresh: handleRefresh,
+      onAuditLog: logAuditEvent,
+      isPopulating,
+      notificationsEnabled,
+    }}>
     <div className="min-h-screen relative">
 
 
@@ -331,10 +341,11 @@ export default function App() {
       </div>
 
       {/* Audit Trail */}
-      <AuditTrail 
+      <AuditTrail
         events={auditEvents}
         isVisible={showAuditTrail}
       />
     </div>
+    </DemoContext.Provider>
   );
 }
