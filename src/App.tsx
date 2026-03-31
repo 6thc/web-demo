@@ -20,9 +20,10 @@ import { toast } from "sonner@2.0.3";
 import { Button } from "./components/ui/button";
 import { RotateCcw, Database, Bell, BellOff, List, ListX } from "lucide-react";
 import { AuditTrail } from "./components/AuditTrail";
-import { resetToFreshUser, resetToActiveUser, approveAllPendingRequests, declineAllPendingRequests, addPendingRequest, approvePendingRequest, verifyLoanCalculations, processCreditPayment } from "./components/data/credits";
-import { resetTransactionsToFreshUser, resetTransactionsToActiveUser, addLoanDisbursementTransaction, addCashTransaction, addLoanRepaymentTransaction } from "./components/data/transactions";
-import { addPledgerActivity, resetPledgerActivitiesToFresh, resetPledgerActivitiesToActive } from "./components/data/pledger-activity";
+import { approveAllPendingRequests, declineAllPendingRequests, addPendingRequest, approvePendingRequest, verifyLoanCalculations, processCreditPayment } from "./components/data/credits";
+import { addLoanDisbursementTransaction, addCashTransaction, addLoanRepaymentTransaction } from "./components/data/transactions";
+import { addPledgerActivity } from "./components/data/pledger-activity";
+import { resetAllToFresh } from "./components/data/reset";
 import { topUpWallet, lockFunds } from "./components/data/wallet";
 import toposLogo from 'figma:asset/4b031171cb67357b991e3d5c9c7dd0b75de1bf28.png';
 
@@ -35,9 +36,7 @@ async function buildActivityHistoryProgressively(onRefresh: () => void, notifica
     verifyLoanCalculations();
     
     // Reset everything to fresh first
-    resetToFreshUser();
-    resetTransactionsToFreshUser();
-    resetPledgerActivitiesToFresh();
+    resetAllToFresh();
     onRefresh(); // Show clean slate
     
     if (notificationsEnabled) {
@@ -362,9 +361,7 @@ async function buildActivityHistoryProgressively(onRefresh: () => void, notifica
     }
     
     // Reset to fresh state on error
-    resetToFreshUser();
-    resetTransactionsToFreshUser();
-    resetPledgerActivitiesToFresh();
+    resetAllToFresh();
     onRefresh();
     throw error;
   }
@@ -799,9 +796,7 @@ export default function App() {
 
   const handleResetToFreshUser = () => {
     setUserState('fresh');
-    resetToFreshUser();
-    resetTransactionsToFreshUser();
-    resetPledgerActivitiesToFresh();
+    resetAllToFresh();
     
     // Clear audit trail
     setAuditEvents([]);
