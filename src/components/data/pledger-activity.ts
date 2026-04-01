@@ -1,6 +1,6 @@
 export interface PledgerActivity {
   id: string;
-  type: 'wallet_topup' | 'funds_locked' | 'funds_unlocked' | 'loan_disbursed' | 'loan_repayment' | 'pledge_approved' | 'pledge_declined' | 'collateral_locked' | 'collateral_released';
+  type: 'wallet_topup' | 'funds_locked' | 'funds_unlocked' | 'loan_disbursed' | 'loan_repayment' | 'pledge_approved' | 'pledge_declined' | 'collateral_locked' | 'collateral_released' | 'collateral_seized' | 'settlement_completed' | 'grace_warning';
   title: string;
   description: string;
   amount: number;
@@ -98,13 +98,19 @@ export const getActivityIconType = (type: PledgerActivity['type']): string => {
       return 'check';
     case 'pledge_declined':
       return 'x';
+    case 'collateral_seized':
+      return 'alert-triangle';
+    case 'settlement_completed':
+      return 'check-circle';
+    case 'grace_warning':
+      return 'clock';
     default:
       return 'activity';
   }
 };
 
 export const getActivityDisplayAmount = (activity: PledgerActivity): number => {
-  const isNegative = ['funds_locked', 'collateral_locked', 'loan_disbursed'].includes(activity.type);
+  const isNegative = ['funds_locked', 'collateral_locked', 'loan_disbursed', 'collateral_seized'].includes(activity.type);
   const amount = isNegative ? -Math.abs(activity.amount) : Math.abs(activity.amount);
   
   return amount;

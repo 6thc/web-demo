@@ -33,7 +33,7 @@ export interface Credit {
   nextPayment: string;
   startDate: string;
   endDate: string;
-  status: 'pending' | 'reviewing' | 'active' | 'completed' | 'defaulted' | 'cancelled';
+  status: 'pending' | 'reviewing' | 'active' | 'overdue' | 'completed' | 'defaulted' | 'cancelled';
   submittedDate?: string;
   approvedDate?: string;
   completedDate?: string;
@@ -47,6 +47,25 @@ export interface Credit {
   totalPaidUSD?: number; // Total paid in USD
   lateFees?: number;
   earlyPaymentDiscount?: number;
+  // Grace period & default fields
+  gracePeriodDays?: number;
+  graceDeadline?: string;
+  overdueDate?: string;
+  defaultDate?: string;
+  penaltyInterest?: number;
+  penaltyInterestUSD?: number;
+  penaltyRate?: number;
+  missedInstallments?: number;
+  lastPaymentDate?: string;
+  settlement?: {
+    totalSeized: number;
+    creditJVShare: number;
+    toposFeeShare: number;
+    pledgerRemainder: number;
+    outstandingDebt: number;
+    outstandingDebtUSD: number;
+    settledDate: string;
+  };
   // Legacy fields for backward compatibility
   termMonths: number; // Deprecated, use termDays instead
   monthlyPayment: number; // Deprecated, use installmentAmount instead
@@ -62,7 +81,7 @@ export interface PaymentRecord {
   date: string;
   time: string;
   status: 'completed' | 'pending' | 'failed';
-  type: 'regular' | 'early' | 'partial' | 'late';
+  type: 'regular' | 'early' | 'partial' | 'late' | 'penalty';
   principalAmount: number; // Principal amount in NGN
   principalAmountUSD: number; // Principal amount in USD
   interestAmount: number; // Interest amount in NGN

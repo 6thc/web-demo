@@ -119,6 +119,24 @@ export function lockFunds(creditId: string, amount: number, userState: 'fresh' |
   return { success: true };
 }
 
+export function seizeFunds(creditId: string): { success: boolean; seizedAmount?: number; error?: string } {
+  const lockIndex = walletState.lockedFunds.findIndex(lock => lock.creditId === creditId);
+
+  if (lockIndex === -1) {
+    return { success: false, error: 'No locked funds found for this credit' };
+  }
+
+  const seizedAmount = walletState.lockedFunds[lockIndex].amount;
+
+  // Remove from lockedFunds array
+  walletState.lockedFunds.splice(lockIndex, 1);
+
+  // Deduct seized amount from wallet balance (money leaves the pledger wallet entirely)
+  walletState.balance = Math.max(0, walletState.balance - seizedAmount);
+
+  return { success: true, seizedAmount };
+}
+
 export function unlockFunds(creditId: string): { success: boolean; error?: string } {
   const lockIndex = walletState.lockedFunds.findIndex(lock => lock.creditId === creditId);
   
