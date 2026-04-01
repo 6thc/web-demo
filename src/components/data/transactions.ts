@@ -1,5 +1,6 @@
 import { addPledgerActivity } from './pledger-activity';
 import { getCreditsForUserState, convertLocalToUSD, getTotalCreditBalance, getInstallmentLabel } from './credits';
+import { BORROWER_NAME, CREDIT_ACCOUNT_LABEL, BORROWER_ACCOUNT_LABEL } from './demo-config';
 
 export interface Transaction {
   id: string;
@@ -130,8 +131,8 @@ export const addLoanDisbursementTransaction = (
     }),
     status: "completed",
     reference: `LOAN${transactionDate.getFullYear()}${String(transactionDate.getMonth() + 1).padStart(2, '0')}${String(nextTransactionId - 1).padStart(3, '0')}`,
-    fromAccount: "TOPOS Credit - 4433221100",
-    toAccount: "Your Account - 0987654321",
+    fromAccount: CREDIT_ACCOUNT_LABEL,
+    toAccount: BORROWER_ACCOUNT_LABEL,
     balanceAfter: newBalance
   };
   
@@ -166,7 +167,7 @@ export const addLoanDisbursementTransaction = (
           hour12: true 
         }),
         status: 'completed',
-        borrowerName: 'Segun Adebayo',
+        borrowerName: BORROWER_NAME,
         creditId: creditId
       }, userState);
     }
@@ -232,8 +233,8 @@ export const addLoanRepaymentTransaction = (
     }),
     status: "completed",
     reference: `LOAN${transactionDate.getFullYear()}${String(transactionDate.getMonth() + 1).padStart(2, '0')}${String(nextTransactionId - 1).padStart(3, '0')}`,
-    fromAccount: "Your Account - 0987654321",
-    toAccount: "TOPOS Credit - 4433221100",
+    fromAccount: BORROWER_ACCOUNT_LABEL,
+    toAccount: CREDIT_ACCOUNT_LABEL,
     balanceAfter: newBalance
   };
   
@@ -275,7 +276,7 @@ export const addLoanRepaymentTransaction = (
           hour12: true 
         }),
         status: 'completed',
-        borrowerName: 'Segun Adebayo',
+        borrowerName: BORROWER_NAME,
         creditId: creditId
       }, userState);
     }
@@ -360,11 +361,11 @@ export const addCashTransaction = (
     status: 'completed',
     reference: `CASH${transactionDate.getFullYear()}${String(transactionDate.getMonth() + 1).padStart(2, '0')}${String(nextTransactionId - 1).padStart(3, '0')}`,
     fromAccount: type === 'withdraw' 
-      ? 'Your Account - 0987654321' 
+      ? BORROWER_ACCOUNT_LABEL 
       : 'Cash Deposit',
     toAccount: type === 'withdraw' 
       ? 'Cash Withdrawal' 
-      : 'Your Account - 0987654321',
+      : BORROWER_ACCOUNT_LABEL,
     balanceAfter: newBalance
   };
   
@@ -417,7 +418,7 @@ export const addTransferTransaction = (
     }),
     status: transferType === 'topos' ? 'completed' : 'pending',
     reference: `TXN${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(nextTransactionId - 1).padStart(3, '0')}`,
-    fromAccount: 'Your Account - 0987654321',
+    fromAccount: BORROWER_ACCOUNT_LABEL,
     toAccount: recipient,
     fee: transferType === 'topos' ? 0 : 0, // Free for now
     balanceAfter: newBalance

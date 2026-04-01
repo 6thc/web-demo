@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner@2.0.3";
+import { BORROWER_NAME } from "../data/demo-config";
 
 interface ReceiveMoneyScreenProps {
   onBack: () => void;
@@ -15,7 +16,7 @@ export function ReceiveMoneyScreen({ onBack }: ReceiveMoneyScreenProps) {
 
   // Mock user data - in real app this would come from user context/props
   const userAccount = {
-    name: "Segun Adebayo",
+    name: BORROWER_NAME,
     phone: "+234 801 234 5678",
     accountNumber: "1234567890",
     bankCode: "058", // Mock bank code
