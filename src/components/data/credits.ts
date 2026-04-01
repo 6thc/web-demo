@@ -1,6 +1,6 @@
 import { addPledgerActivity } from './pledger-activity';
-import { unlockFunds, resetWallet, initializeFreshWallet, initializeActiveWallet } from './wallet';
-import { BORROWER_NAME } from './demo-config';
+import { unlockFunds, seizeFunds, topUpWallet, resetWallet, initializeFreshWallet, initializeActiveWallet } from './wallet';
+import { BORROWER_NAME, GRACE_PERIOD_DAYS, PENALTY_ANNUAL_INTEREST_RATE, TOPOS_PLATFORM_FEE_RATE } from './demo-config';
 import {
   type Credit,
   type PaymentRecord,
@@ -345,7 +345,7 @@ const _applyPayment = (
   }
 
   const credit = creditsState[creditIndex];
-  if (credit.status !== 'active') {
+  if (credit.status !== 'active' && credit.status !== 'overdue') {
     return { success: false, error: 'Credit is not active' };
   }
 
@@ -397,6 +397,11 @@ const _applyPayment = (
 
   // Persist to the correct state array
   creditsState[creditIndex] = updatedCredit;
+
+  // If credit was overdue and payment received (but not fully paid), resolve grace period
+  if (credit.status === 'overdue' && !isFullyPaid) {
+    resolveGracePeriod(creditId, userState);
+  }
 
   // If loan is fully paid, release collateral
   if (isFullyPaid) {
@@ -516,4 +521,201 @@ export const processCreditPayment = (
   });
 
   return { success: result.success, error: result.error, updatedCredit: result.updatedCredit };
+};
+
+// --- Grace period & default flow ---
+
+export const detectOverdue = (creditId: string, userState: 'fresh' | 'active' = 'active'): Credit | null => {
+  const creditsState = getCreditsForUserState(userState);
+  const creditIndex = creditsState.findIndex(c => c.id === creditId);
+  if (creditIndex === -1) return null;
+
+  const credit = creditsState[creditIndex];
+  if (credit.status !== 'active') return null;
+
+  const now = new Date();
+  const overdueDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  const graceDeadlineDate = new Date(now);
+  graceDeadlineDate.setDate(graceDeadlineDate.getDate() + GRACE_PERIOD_DAYS);
+  const graceDeadline = graceDeadlineDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  const updatedCredit: Credit = {
+    ...credit,
+    status: 'overdue',
+    overdueDate,
+    gracePeriodDays: GRACE_PERIOD_DAYS,
+    graceDeadline,
+    penaltyRate: PENALTY_ANNUAL_INTEREST_RATE,
+    missedInstallments: 1,
+    penaltyInterest: credit.penaltyInterest || 0,
+    penaltyInterestUSD: credit.penaltyInterestUSD || 0,
+  };
+
+  creditsState[creditIndex] = updatedCredit;
+
+  // Log grace warning activity
+  try {
+    addPledgerActivity({
+      type: 'grace_warning',
+      title: 'Payment Overdue',
+      description: `Loan payment overdue — ${GRACE_PERIOD_DAYS}-day grace period started`,
+      amount: credit.installmentAmountUSD,
+      date: overdueDate,
+      time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+      status: 'pending',
+      borrowerName: BORROWER_NAME,
+      creditId,
+    }, userState);
+  } catch (e) {
+    console.warn('Failed to create grace warning activity:', e);
+  }
+
+  return updatedCredit;
+};
+
+export const applyPenaltyInterest = (
+  creditId: string,
+  userState: 'fresh' | 'active' = 'active'
+): { success: boolean; penaltyAmount?: number; error?: string } => {
+  const creditsState = getCreditsForUserState(userState);
+  const creditIndex = creditsState.findIndex(c => c.id === creditId);
+  if (creditIndex === -1) return { success: false, error: 'Credit not found' };
+
+  const credit = creditsState[creditIndex];
+  if (credit.status !== 'overdue') return { success: false, error: 'Credit is not overdue' };
+
+  // Calculate days overdue
+  const overdueStart = credit.overdueDate ? new Date(credit.overdueDate) : new Date();
+  const now = new Date();
+  const overdueDays = Math.max(1, Math.floor((now.getTime() - overdueStart.getTime()) / (1000 * 60 * 60 * 24)));
+
+  const penaltyRate = credit.penaltyRate || PENALTY_ANNUAL_INTEREST_RATE;
+  const penaltyAmount = Math.round(credit.remaining * (penaltyRate / 100) * (overdueDays / 365));
+  const penaltyAmountUSD = convertLocalToUSD(penaltyAmount);
+
+  const newPenaltyInterest = (credit.penaltyInterest || 0) + penaltyAmount;
+  const newPenaltyInterestUSD = (credit.penaltyInterestUSD || 0) + penaltyAmountUSD;
+
+  const updatedCredit: Credit = {
+    ...credit,
+    penaltyInterest: newPenaltyInterest,
+    penaltyInterestUSD: newPenaltyInterestUSD,
+    remaining: credit.remaining + penaltyAmount,
+    remainingUSD: convertLocalToUSD(credit.remaining + penaltyAmount),
+    totalToRepay: credit.totalToRepay + penaltyAmount,
+    totalToRepayUSD: convertLocalToUSD(credit.totalToRepay + penaltyAmount),
+  };
+
+  creditsState[creditIndex] = updatedCredit;
+
+  return { success: true, penaltyAmount };
+};
+
+export const resolveGracePeriod = (creditId: string, userState: 'fresh' | 'active' = 'active'): Credit | null => {
+  const creditsState = getCreditsForUserState(userState);
+  const creditIndex = creditsState.findIndex(c => c.id === creditId);
+  if (creditIndex === -1) return null;
+
+  const credit = creditsState[creditIndex];
+  if (credit.status !== 'overdue') return null;
+
+  const updatedCredit: Credit = {
+    ...credit,
+    status: 'active',
+    graceDeadline: undefined,
+    lastPaymentDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+  };
+
+  creditsState[creditIndex] = updatedCredit;
+
+  return updatedCredit;
+};
+
+export const declareDefault = (
+  creditId: string,
+  userState: 'fresh' | 'active' = 'active'
+): { success: boolean; settlement?: Credit['settlement']; error?: string } => {
+  const creditsState = getCreditsForUserState(userState);
+  const creditIndex = creditsState.findIndex(c => c.id === creditId);
+  if (creditIndex === -1) return { success: false, error: 'Credit not found' };
+
+  const credit = creditsState[creditIndex];
+  if (credit.status !== 'overdue') return { success: false, error: 'Credit is not overdue' };
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  // Seize collateral
+  const seizeResult = seizeFunds(creditId);
+  if (!seizeResult.success || seizeResult.seizedAmount === undefined) {
+    return { success: false, error: seizeResult.error || 'Failed to seize funds' };
+  }
+
+  const seizedAmount = seizeResult.seizedAmount;
+  const outstandingDebt = credit.remaining;
+  const outstandingDebtUSD = convertLocalToUSD(outstandingDebt);
+
+  // Calculate settlement distribution
+  const creditJVShare = Math.min(outstandingDebtUSD, seizedAmount);
+  const toposFeeShare = Math.round(seizedAmount * TOPOS_PLATFORM_FEE_RATE * 100) / 100;
+  const pledgerRemainder = Math.max(0, Math.round((seizedAmount - creditJVShare - toposFeeShare) * 100) / 100);
+
+  const settlement: Credit['settlement'] = {
+    totalSeized: seizedAmount,
+    creditJVShare,
+    toposFeeShare,
+    pledgerRemainder,
+    outstandingDebt,
+    outstandingDebtUSD,
+    settledDate: dateStr,
+  };
+
+  const updatedCredit: Credit = {
+    ...credit,
+    status: 'defaulted',
+    defaultDate: dateStr,
+    settlement,
+  };
+
+  creditsState[creditIndex] = updatedCredit;
+
+  // Return remainder to pledger if any
+  if (pledgerRemainder > 0) {
+    topUpWallet(pledgerRemainder);
+  }
+
+  // Log pledger activities
+  try {
+    addPledgerActivity({
+      type: 'collateral_seized',
+      title: 'Collateral Seized',
+      description: `Collateral seized due to loan default — $${seizedAmount.toFixed(2)} seized`,
+      amount: seizedAmount,
+      date: dateStr,
+      time: timeStr,
+      status: 'completed',
+      borrowerName: BORROWER_NAME,
+      creditId,
+    }, userState);
+
+    addPledgerActivity({
+      type: 'settlement_completed',
+      title: 'Settlement Completed',
+      description: pledgerRemainder > 0
+        ? `Default settlement completed — $${pledgerRemainder.toFixed(2)} returned to wallet`
+        : 'Default settlement completed — no remainder to return',
+      amount: pledgerRemainder,
+      date: dateStr,
+      time: timeStr,
+      status: 'completed',
+      borrowerName: BORROWER_NAME,
+      creditId,
+    }, userState);
+  } catch (e) {
+    console.warn('Failed to create default settlement activities:', e);
+  }
+
+  return { success: true, settlement };
 };
