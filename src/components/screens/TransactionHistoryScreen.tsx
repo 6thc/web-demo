@@ -69,7 +69,7 @@ export function TransactionHistoryScreen({ onBack, onTransactionClick, userState
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   return (
-    <div className="bg-muted/30 min-h-screen pt-2">
+    <div className="bg-muted/30 min-h-screen pt-2 page-enter">
       {/* Header */}
       <div className="bg-background border-b border-border/50 px-4 py-3">
         <div className="flex items-center gap-3">

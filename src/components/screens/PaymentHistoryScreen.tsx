@@ -84,12 +84,12 @@ export function PaymentHistoryScreen({ creditId, onBack, onTransactionClick, use
     .reduce((sum, p) => sum + p.interestAmount, 0);
 
   return (
-    <div className="bg-muted/30 min-h-screen">
+    <div className="bg-muted/30 min-h-screen page-enter">
       {/* Header */}
       <div className="bg-background border-b border-border/50 px-4 py-3">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={onBack}
             className="h-10 w-10"
