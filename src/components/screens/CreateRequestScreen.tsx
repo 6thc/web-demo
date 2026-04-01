@@ -146,7 +146,7 @@ export function CreateRequestScreen({ onBack, onSubmit, userState = 'fresh' }: C
   };
 
   return (
-    <div className="bg-muted/30 min-h-screen pt-2 page-enter">
+    <div className="bg-muted/30 min-h-screen pt-2">
       {/* Header */}
       <div className="bg-background border-b border-border/50 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -357,7 +357,7 @@ export function CreateRequestScreen({ onBack, onSubmit, userState = 'fresh' }: C
       </div>
 
       {/* Fixed Bottom Actions */}
-      <div className="absolute bottom-0 left-0 right-0 backdrop-blur-sm bg-background/95 border-t border-border/50 p-4">
+      <div className="absolute bottom-0 left-0 right-0 bg-background border-t border-border/50 p-4">
         <Button 
           onClick={handleContinue}
           disabled={!isStepValid()}

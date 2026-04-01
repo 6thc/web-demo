@@ -256,7 +256,7 @@ export function PledgerRequestDetailsScreen({ creditId, onBack, onApproved, onDe
   };
 
   return (
-    <div className="bg-muted/30 min-h-screen page-enter">
+    <div className="bg-muted/30 min-h-screen">
       {/* Header */}
       <div className="bg-background border-b border-border/50 px-4 py-3">
         <div className="flex items-center justify-between">

@@ -55,9 +55,9 @@ export function HomeScreen({ userName, onViewAllTransactions, onTransactionClick
   };
 
   return (
-    <div className="bg-muted/30 h-full pt-2 relative page-enter">
+    <div className="bg-muted/30 h-full pt-2 relative">
       {/* Topos Red Background - cuts off behind balance card */}
-      <div className="absolute top-0 left-0 right-0 h-52 z-0 hero-gradient-borrower"></div>
+      <div className="absolute top-0 left-0 right-0 h-52 z-0" style={{ backgroundColor: '#E52A5B' }}></div>
       
       {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10">
@@ -79,40 +79,34 @@ export function HomeScreen({ userName, onViewAllTransactions, onTransactionClick
         {/* Balance Card */}
         <WalletBalanceCard 
           userState={userState}
-          className="bg-white/[0.97] backdrop-blur-md border-0 text-foreground shadow-lg relative z-10"
+          className="bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-lg relative z-10"
           onCreditClick={onCreditClick}
         />
 
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-3 mt-6">
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             className="h-16 flex-col gap-1 text-xs"
             onClick={handleTransferClick}
           >
-            <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center">
-              <ArrowUpRight className="h-4 w-4" />
-            </div>
+            <ArrowUpRight className="h-4 w-4" />
             Transfer
           </Button>
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             className="h-16 flex-col gap-1 text-xs"
             onClick={handleReceiveClick}
           >
-            <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center">
-              <ArrowDownLeft className="h-4 w-4" />
-            </div>
+            <ArrowDownLeft className="h-4 w-4" />
             Receive
           </Button>
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             className="h-16 flex-col gap-1 text-xs"
             onClick={handleCashClick}
           >
-            <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center">
-              <Banknote className="h-4 w-4" />
-            </div>
+            <Banknote className="h-4 w-4" />
             Cash
           </Button>
         </div>

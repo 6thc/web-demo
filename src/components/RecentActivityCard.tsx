@@ -63,10 +63,10 @@ export function RecentActivityCard({
             <div key={transaction.id}>
               <button
                 onClick={() => onTransactionClick(transaction.id)}
-                className="w-full flex items-center justify-between py-2 text-left hover:bg-muted/50 hover:shadow-sm active:scale-[0.99] rounded-lg px-2 -mx-2 transition-all"
+                className="w-full flex items-center justify-between py-2 text-left hover:bg-muted/50 rounded-lg px-2 -mx-2 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center ${getTransactionIconColor(transaction)}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getTransactionIconColor(transaction)}`}>
                       {getTransactionIcon(transaction)}
                     </div>
                     <div>

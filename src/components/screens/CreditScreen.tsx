@@ -74,9 +74,9 @@ export function CreditScreen({ onCreateRequest, onCreditClick, userState }: Cred
   };
 
   return (
-    <div className="bg-muted/30 h-full pt-2 relative page-enter">
+    <div className="bg-muted/30 h-full pt-2 relative">
       {/* Topos Red Background - cuts off behind content */}
-      <div className="absolute top-0 left-0 right-0 h-52 z-0 hero-gradient-borrower"></div>
+      <div className="absolute top-0 left-0 right-0 h-52 z-0" style={{ backgroundColor: '#E52A5B' }}></div>
       
       {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10">

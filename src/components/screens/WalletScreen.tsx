@@ -100,9 +100,9 @@ export function WalletScreen({
 
 
   return (
-    <div className="bg-muted/30 h-full pt-2 relative page-enter">
+    <div className="bg-muted/30 h-full pt-2 relative">
       {/* Topos Red Background - cuts off behind balance card */}
-      <div className="absolute top-0 left-0 right-0 h-52 z-0 hero-gradient-borrower"></div>
+      <div className="absolute top-0 left-0 right-0 h-52 z-0" style={{ backgroundColor: '#E52A5B' }}></div>
       
       {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10">
@@ -124,7 +124,7 @@ export function WalletScreen({
         <WalletBalanceCard 
           key={refreshKey}
           userState={userState}
-          className="bg-white/[0.97] backdrop-blur-md border-0 text-foreground shadow-lg relative z-10"
+          className="bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-lg relative z-10"
         />
 
 
