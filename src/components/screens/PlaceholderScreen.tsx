@@ -7,7 +7,7 @@ interface PlaceholderScreenProps {
 
 export function PlaceholderScreen({ title, description }: PlaceholderScreenProps) {
   return (
-    <div className="bg-muted/30 min-h-screen pb-20 page-enter">
+    <div className="bg-muted/30 min-h-screen pb-20">
       <div className="px-4 pt-8 pb-4">
         <h1 className="text-2xl font-semibold mb-2">{title}</h1>
         <p className="text-muted-foreground">{description}</p>

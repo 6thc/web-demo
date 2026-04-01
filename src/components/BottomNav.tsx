@@ -23,15 +23,17 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex-1 flex flex-col items-center gap-1 py-3 px-2 transition-colors ${
-                isActive
-                  ? 'text-primary'
+              className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 transition-colors ${
+                isActive 
+                  ? 'text-primary' 
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {isActive && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
-              <Icon className={`h-5 w-5 transition-transform ${isActive ? 'fill-current scale-110' : ''}`} />
+              <Icon className={`h-5 w-5 ${isActive ? 'fill-current' : ''}`} />
               <span className="text-xs font-medium">{tab.label}</span>
+              {isActive && (
+                <div className="w-1 h-1 bg-primary rounded-full mt-1" />
+              )}
             </button>
           );
         })}

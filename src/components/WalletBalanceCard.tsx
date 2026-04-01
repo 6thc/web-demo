@@ -81,9 +81,9 @@ export function WalletBalanceCard({ userState, className, onCreditClick }: Walle
       <CardContent className={`pt-6 px-6 ${hasLoans ? 'pb-0' : 'pb-4'}`}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-muted-foreground uppercase tracking-wider text-xs opacity-70">Checking Balance</p>
+            <p className="text-muted-foreground text-sm">Checking Balance</p>
             <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-bold tabular-nums tracking-tight">
+              <h2 className="text-3xl font-bold">
                 {showBalance ? formatCurrency(checkingBalance) : "••••••"}
               </h2>
               <Button

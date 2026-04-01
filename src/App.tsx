@@ -138,16 +138,16 @@ export default function App() {
 
 
       {/* Left side - Pledger (Light background) */}
-      <div className="absolute inset-y-0 left-0 right-1/2 bg-slate-200">
+      <div className="absolute inset-y-0 left-0 right-1/2 bg-muted/20">
       </div>
 
       {/* Right side - Borrower (Dark background) */}
-      <div className="absolute inset-y-0 left-1/2 right-0 hero-gradient-pledger">
+      <div className="absolute inset-y-0 left-1/2 right-0" style={{ backgroundColor: '#3f3d56' }}>
       </div>
 
       {/* Pledger Label - positioned above left phone */}
       <div className="absolute flex items-center justify-center z-10" style={{ right: '50%', marginRight: '120px', top: 'calc(50% - 428px)' }}>
-        <div className="text-slate-700 tracking-wider text-lg font-bold">ABIMBOLA, PLEDGER</div>
+        <div className="text-slate-600 tracking-wider text-lg font-bold">ABIMBOLA, PLEDGER</div>
       </div>
 
       {/* Borrower Label - positioned above right phone */}

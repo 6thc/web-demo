@@ -70,9 +70,9 @@ export function PledgerHomeScreen({ userName = "Abimbola", userState, refreshKey
 
 
   return (
-    <div className="bg-muted/30 h-full pt-2 relative page-enter">
+    <div className="bg-muted/30 h-full pt-2 relative">
       {/* Dark Grey Background - cuts off behind wallet card */}
-      <div className="absolute top-0 left-0 right-0 h-52 z-0 hero-gradient-pledger"></div>
+      <div className="absolute top-0 left-0 right-0 h-52 z-0" style={{ backgroundColor: '#3f3d56' }}></div>
       
       {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10">
@@ -93,7 +93,7 @@ export function PledgerHomeScreen({ userName = "Abimbola", userState, refreshKey
         {/* Wallet Balance Card */}
         <PledgerWalletBalanceCard 
           userState={userState}
-          className="bg-white/[0.97] backdrop-blur-md border-0 text-foreground shadow-lg relative z-10"
+          className="bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-lg relative z-10"
         />
 
         {/* Wallet Action Buttons */}
@@ -103,9 +103,7 @@ export function PledgerHomeScreen({ userName = "Abimbola", userState, refreshKey
             className="h-16 flex-col gap-1 text-xs"
             onClick={onTopUp}
           >
-            <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center">
-              <ArrowDownLeft className="h-4 w-4" />
-            </div>
+            <ArrowDownLeft className="h-4 w-4" />
             Top Up
           </Button>
           <Button
@@ -114,9 +112,7 @@ export function PledgerHomeScreen({ userName = "Abimbola", userState, refreshKey
             onClick={onWithdraw}
             disabled={walletBalance === 0}
           >
-            <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center">
-              <ArrowUpRight className="h-4 w-4" />
-            </div>
+            <ArrowUpRight className="h-4 w-4" />
             Withdraw
           </Button>
         </div>
