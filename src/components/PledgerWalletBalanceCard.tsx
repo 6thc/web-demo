@@ -61,9 +61,9 @@ export function PledgerWalletBalanceCard({ userState, className }: PledgerWallet
       <CardContent className={`pt-6 px-6 ${lockedBalance > 0 ? 'pb-6' : 'pb-4'}`}>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-muted-foreground text-sm">Wallet Balance</p>
+            <p className="text-muted-foreground uppercase tracking-wider text-xs opacity-70">Wallet Balance</p>
             <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-bold">
+              <h2 className="text-3xl font-bold tabular-nums tracking-tight">
                 {showBalance ? formatUSD(walletBalance) : "••••••"}
               </h2>
               <Button

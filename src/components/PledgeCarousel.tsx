@@ -135,7 +135,7 @@ export function PledgeCarousel({ pledges, onPledgeClick, onNavigateToPledges }: 
                 }`}
               >
                 <Card 
-                  className="bg-card border cursor-pointer hover:shadow-sm transition-shadow h-full"
+                  className="bg-card border cursor-pointer shadow-sm hover:shadow-md transition-shadow active:scale-[0.98] h-full"
                   onClick={() => onPledgeClick?.(pledge.id)}
                 >
                   <CardContent className="p-3 h-full">

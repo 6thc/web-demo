@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, userName = "Segun" }: HeaderProps) {
   return (
-    <div className="bg-background border-b border-border/50 px-4 py-3">
+    <div className="bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.05)] px-4 py-3">
       <div className="flex items-center justify-between">
         {/* Logo and User Greeting */}
         <div className="flex items-center gap-3">
