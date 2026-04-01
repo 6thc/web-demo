@@ -11,7 +11,7 @@
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
   --text-3xl: 1.875rem;
-  --background: #f9f9f9;
+  --background: #fafbfc;
   --foreground: #3f3d56;
   --card: #ffffff;
   --card-foreground: #3f3d56;
@@ -21,8 +21,8 @@
   --primary-foreground: #ffffff;
   --secondary: #f9f9f9;
   --secondary-foreground: #3f3d56;
-  --muted: #f9f9f9;
-  --muted-foreground: #6b6b6b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --accent: #16a34a;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
@@ -50,6 +50,30 @@
   --sidebar-ring: #E52A5B;
   --hover-background: #3f3d56;
   --hover-foreground: #ffffff;
+
+  /* Shadow / Elevation system */
+  --shadow-xs: 0 1px 2px 0 rgba(0,0,0,0.03);
+  --shadow-sm: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.06), 0 4px 6px -4px rgba(0,0,0,0.04);
+
+  /* Gradient tokens */
+  --gradient-borrower: linear-gradient(135deg, #E52A5B 0%, #C41E4A 50%, #A31640 100%);
+  --gradient-pledger: linear-gradient(135deg, #4A4865 0%, #3f3d56 50%, #2E2C42 100%);
+
+  /* Status colors */
+  --status-success: #16a34a;
+  --status-success-bg: #f0fdf4;
+  --status-warning: #ea580c;
+  --status-warning-bg: #fff7ed;
+  --status-error: #dc2626;
+  --status-error-bg: #fef2f2;
+  --status-info: #2563eb;
+  --status-info-bg: #eff6ff;
+
+  /* Transition durations */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
 }
 
 .dark {
@@ -152,20 +176,22 @@
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {
       font-size: var(--text-2xl);
-      font-weight: var(--font-weight-medium);
+      font-weight: 600;
       line-height: 1.5;
+      letter-spacing: -0.02em;
       color: var(--color-foreground);
     }
 
     h2 {
       font-size: var(--text-xl);
-      font-weight: var(--font-weight-medium);
+      font-weight: 600;
       line-height: 1.5;
+      letter-spacing: -0.02em;
     }
 
     h3 {
       font-size: var(--text-lg);
-      font-weight: var(--font-weight-medium);
+      font-weight: 600;
       line-height: 1.5;
     }
 
@@ -245,4 +271,19 @@ html {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .hero-gradient-borrower {
+    background: var(--gradient-borrower);
+  }
+  .hero-gradient-pledger {
+    background: var(--gradient-pledger);
+  }
+}
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: page-enter 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
