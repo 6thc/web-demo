@@ -8,6 +8,7 @@ import { Separator } from "../ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { getCreditsForUserState, pledgerApproveLoan, pledgerDeclineLoan, getUSDToLocalRate, getInstallmentLabel } from "../data/credits";
 import { getAvailableBalance, lockFunds, isFundsLocked } from "../data/wallet";
+import { BORROWER_NAME } from "../data/demo-config";
 import { addLoanDisbursementTransaction } from "../data/transactions";
 import { getPledgerActivitiesByCredit, getActivityIconType, getActivityDisplayAmount, formatCurrency as formatUSDCurrency, type PledgerActivity } from "../data/pledger-activity";
 import { toast } from "sonner@2.0.3";
@@ -71,7 +72,7 @@ export function PledgerRequestDetailsScreen({ creditId, onBack, onApproved, onDe
       });
     } else {
       copyToClipboard(
-        `Pledge: ${credit.loanId}\\nAmount: ${credit.totalAmountUSD.toLocaleString()}\\nBorrower: Segun Adebayo\\nStatus: ${credit.status}`,
+        `Pledge: ${credit.loanId}\\nAmount: ${credit.totalAmountUSD.toLocaleString()}\\nBorrower: ${BORROWER_NAME}\\nStatus: ${credit.status}`,
         "Pledge details"
       );
     }
@@ -331,7 +332,7 @@ export function PledgerRequestDetailsScreen({ creditId, onBack, onApproved, onDe
                     <span className="text-sm text-primary font-medium">Action Required</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Segun Adebayo is requesting your backing for this loan
+                    {BORROWER_NAME} is requesting your backing for this loan
                   </p>
                 </div>
               ) : credit.status === 'active' ? (
@@ -558,7 +559,7 @@ export function PledgerRequestDetailsScreen({ creditId, onBack, onApproved, onDe
                     <User className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Segun Adebayo</h3>
+                    <h3 className="font-semibold">{BORROWER_NAME}</h3>
                     <p className="text-sm text-muted-foreground">Primary Account Holder</p>
                   </div>
                   <div className="ml-auto flex items-center gap-2">

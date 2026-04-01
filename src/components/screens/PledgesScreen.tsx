@@ -7,6 +7,7 @@ import { Separator } from "../ui/separator";
 import { Progress } from "../ui/progress";
 import { getCreditsForUserState, formatCurrency, calculatePaymentProgress } from "../data/credits";
 import { formatUSD, getLockedFunds } from "../data/wallet";
+import { BORROWER_NAME } from "../data/demo-config";
 
 interface PledgesScreenProps {
   userState: 'fresh' | 'active';
@@ -175,7 +176,7 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
                             <User className="h-5 w-5 text-orange-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">Segun Adebayo</p>
+                            <p className="font-medium text-sm">{BORROWER_NAME}</p>
                             <p className="text-xs text-muted-foreground">{request.submittedDate}</p>
                           </div>
                         </div>
@@ -222,7 +223,7 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
                             <Shield className="h-5 w-5 text-accent" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">Segun Adebayo</p>
+                            <p className="font-medium text-sm">{BORROWER_NAME}</p>
                             <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
                               Active
                             </Badge>
@@ -285,7 +286,7 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
                             {React.createElement(getStatusConfig(collateral.status).icon, { className: "h-5 w-5" })}
                           </div>
                           <div>
-                            <p className="font-medium text-sm">Segun Adebayo</p>
+                            <p className="font-medium text-sm">{BORROWER_NAME}</p>
                             <Badge 
                               variant="outline" 
                               className={getStatusConfig(collateral.status).color}

@@ -8,6 +8,7 @@ import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { getCreditsForUserState } from "../data/credits";
 import { getWalletBalance, getLockedBalance, getAvailableBalance, formatUSD } from "../data/wallet";
+import { BORROWER_NAME } from "../data/demo-config";
 import { getRecentPledgerActivities, getActivityIconType, getActivityDisplayAmount } from "../data/pledger-activity";
 
 interface PledgerHomeScreenProps {
@@ -28,7 +29,7 @@ export function PledgerHomeScreen({ userName = "Abimbola", userState, refreshKey
   
   const pendingRequests = allCredits.filter(credit => credit.status === 'pending' || credit.status === 'reviewing').map(credit => ({
     id: credit.id,
-    borrowerName: "Segun Adebayo", // In real app, this would come from borrower profile
+    borrowerName: BORROWER_NAME, // In real app, this would come from borrower profile
     amount: credit.totalAmountUSD || credit.totalAmount,
     currency: "USD",
     purpose: credit.purpose,
@@ -39,7 +40,7 @@ export function PledgerHomeScreen({ userName = "Abimbola", userState, refreshKey
 
   const activeLoans = allCredits.filter(credit => credit.status === 'active').map(credit => ({
     id: credit.id,
-    borrowerName: "Segun Adebayo", // In real app, this would come from borrower profile  
+    borrowerName: BORROWER_NAME, // In real app, this would come from borrower profile  
     amount: credit.totalAmountUSD || credit.totalAmount,
     currency: "USD",
     collateralAmount: Math.round((credit.totalAmountUSD || credit.totalAmount) * 1.2), // 120% collateral

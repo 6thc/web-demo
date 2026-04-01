@@ -1,6 +1,7 @@
 // Pledger wallet balance management
 import { addPledgerActivity } from './pledger-activity';
 import { getCreditsForUserState } from './credits';
+import { BORROWER_NAME } from './demo-config';
 
 interface LockedFund {
   creditId: string;
@@ -107,7 +108,7 @@ export function lockFunds(creditId: string, amount: number, userState: 'fresh' |
         hour12: true 
       }),
       status: 'completed',
-      borrowerName: 'Segun Adebayo',
+      borrowerName: BORROWER_NAME,
       creditId: creditId
     }, userState);
   } catch (e) {

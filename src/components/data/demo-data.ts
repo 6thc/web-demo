@@ -4,6 +4,7 @@ import { addLoanDisbursementTransaction, addCashTransaction, addLoanRepaymentTra
 import { addPledgerActivity } from "./pledger-activity";
 import { resetAllToFresh } from "./reset";
 import { topUpWallet, lockFunds } from "./wallet";
+import { PLEDGER_NAME } from "./demo-config";
 
 // Re-entrancy guard for populate function
 let isPopulateRunning = false;
@@ -87,7 +88,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
 
     // Step 3a: Create pending request
     const completedLoan = addPendingRequest({
-      pledgerName: 'Abimbola Adebayo',
+      pledgerName: PLEDGER_NAME,
       pledgerEmail: 'abimbola@email.com',
       pledgerCountry: 'United Kingdom',
       amount: 300000,
@@ -197,7 +198,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
 
     // Step 4a: Create pending request
     const activeLoan = addPendingRequest({
-      pledgerName: 'Abimbola Adebayo',
+      pledgerName: PLEDGER_NAME,
       pledgerEmail: 'abimbola@email.com',
       pledgerCountry: 'United Kingdom',
       amount: 400000,
@@ -316,7 +317,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
     const pendingLoan = addPendingRequest({
-      pledgerName: 'Abimbola Adebayo',
+      pledgerName: PLEDGER_NAME,
       pledgerEmail: 'abimbola@email.com',
       pledgerCountry: 'United Kingdom',
       amount: 250000,

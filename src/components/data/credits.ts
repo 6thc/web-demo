@@ -1,5 +1,6 @@
 import { addPledgerActivity } from './pledger-activity';
 import { unlockFunds, resetWallet, initializeFreshWallet, initializeActiveWallet } from './wallet';
+import { BORROWER_NAME } from './demo-config';
 import {
   type Credit,
   type PaymentRecord,
@@ -231,7 +232,7 @@ export const declinePendingRequest = (creditId: string, userState: 'fresh' | 'ac
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
       time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       status: 'completed',
-      borrowerName: 'Segun Adebayo',
+      borrowerName: BORROWER_NAME,
       creditId: creditId
     }, userState);
   } catch (error) {
@@ -312,7 +313,7 @@ export const lockFunds = (creditId: string, amountUSD: number, userState: 'fresh
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
       time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       status: 'completed',
-      borrowerName: 'Segun Adebayo',
+      borrowerName: BORROWER_NAME,
       creditId: creditId
     }, userState);
 
@@ -413,7 +414,7 @@ const _applyPayment = (
           date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
           time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
           status: 'completed',
-          borrowerName: 'Segun Adebayo',
+          borrowerName: BORROWER_NAME,
           creditId: creditId
         }, userState);
       } catch (error) {
@@ -502,7 +503,7 @@ export const processCreditPayment = (
             date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
             time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
             status: 'completed',
-            borrowerName: 'Segun Adebayo',
+            borrowerName: BORROWER_NAME,
             creditId: cId
           }, uState);
         } else {

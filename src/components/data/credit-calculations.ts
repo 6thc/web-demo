@@ -1,6 +1,8 @@
 // Pure math functions and types for the credit/loan system.
 // No side effects, no state mutations — fully testable in isolation.
 
+import { NGN_TO_USD_RATE, DEFAULT_ANNUAL_INTEREST_RATE } from './demo-config';
+
 export interface Credit {
   id: string;
   loanId: string;
@@ -70,11 +72,8 @@ export interface PaymentRecord {
   reference: string;
 }
 
-// Exchange rate for NGN to USD (hardcoded for simplicity)
-export const NGN_TO_USD_RATE = 0.0022; // 1 NGN = $0.0022 USD (roughly 460 NGN to 1 USD)
-
-// Default annual interest rate (25%)
-export const DEFAULT_ANNUAL_INTEREST_RATE = 25.0;
+// Re-export from centralized config so existing imports from this module keep working
+export { NGN_TO_USD_RATE, DEFAULT_ANNUAL_INTEREST_RATE };
 
 export const convertLocalToUSD = (amountNGN: number): number => {
   return Math.round((amountNGN * NGN_TO_USD_RATE) * 100) / 100; // Round to 2 decimal places
