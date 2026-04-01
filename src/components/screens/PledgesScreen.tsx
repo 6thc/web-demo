@@ -143,7 +143,7 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
   return (
     <div className="bg-muted/30 h-full pt-2 relative">
       {/* Dark Grey Background - cuts off behind content */}
-      <div className="absolute top-0 left-0 right-0 h-52 z-0" style={{ backgroundColor: '#3f3d56' }}></div>
+      <div className="absolute top-0 left-0 right-0 h-52 z-0 hero-gradient-pledger"></div>
       
       {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10">
