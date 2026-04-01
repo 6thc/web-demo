@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, Clock, CheckCircle, CheckCircle2, AlertCircle, User, Calendar, Settings, History, X, Shield } from "lucide-react";
+import { Plus, Clock, CheckCircle, CheckCircle2, AlertCircle, AlertTriangle, User, Calendar, Settings, History, X, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -20,8 +20,8 @@ export function CreditScreen({ onCreateRequest, onCreditClick, userState }: Cred
   const allCredits = getCreditsForUserState(userState);
   const pendingCredits = getPendingCreditsForUserState(userState);
   
-  const activeLoans = allCredits.filter(credit => credit.status === 'active');
-  const pastLoans = allCredits.filter(credit => 
+  const activeLoans = allCredits.filter(credit => credit.status === 'active' || credit.status === 'overdue');
+  const pastLoans = allCredits.filter(credit =>
     credit.status === 'completed' || credit.status === 'cancelled' || credit.status === 'defaulted'
   );
 
@@ -51,6 +51,12 @@ export function CreditScreen({ onCreateRequest, onCreditClick, userState }: Cred
           className: 'bg-red-100 text-red-700 border-red-200',
           label: 'Cancelled',
           icon: X
+        };
+      case 'overdue':
+        return {
+          className: 'bg-amber-100 text-amber-700 border-amber-200',
+          label: 'Overdue',
+          icon: AlertTriangle
         };
       case 'defaulted':
         return {
@@ -157,13 +163,22 @@ export function CreditScreen({ onCreateRequest, onCreditClick, userState }: Cred
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-accent" />
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            loan.status === 'overdue' ? 'bg-amber-100' : 'bg-accent/20'
+                          }`}>
+                            {loan.status === 'overdue'
+                              ? <AlertTriangle className="h-5 w-5 text-amber-600" />
+                              : <User className="h-5 w-5 text-accent" />
+                            }
                           </div>
                           <div>
                             <p className="font-medium text-sm">{loan.pledgerName}</p>
-                            <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
-                              Active
+                            <Badge variant="default" className={`text-xs ${
+                              loan.status === 'overdue'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {loan.status === 'overdue' ? 'Overdue' : 'Active'}
                             </Badge>
                           </div>
                         </div>
