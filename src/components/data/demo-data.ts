@@ -1,5 +1,5 @@
 import { toast } from "sonner@2.0.3";
-import { addPendingRequest, approvePendingRequest, verifyLoanCalculations, processCreditPayment } from "./credits";
+import { addPendingRequest, approvePendingRequest, verifyLoanCalculations, processCreditPayment, detectOverdue, applyPenaltyInterest, declareDefault } from "./credits";
 import { addLoanDisbursementTransaction, addCashTransaction, addLoanRepaymentTransaction } from "./transactions";
 import { addPledgerActivity } from "./pledger-activity";
 import { resetAllToFresh } from "./reset";
@@ -28,7 +28,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
 
     if (notificationsEnabled) {
       toast.info("Building activity history...", {
-        description: "Step 1/7: Resetting to fresh state"
+        description: "Step 1/10: Resetting to fresh state"
       });
     }
 
@@ -54,7 +54,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Update UI to show new deposits
     if (notificationsEnabled) {
       toast.success("Initial deposits added", {
-        description: "Step 2/7: Account funded with ₦580,000"
+        description: "Step 2/10: Account funded with ₦580,000"
       });
     }
 
@@ -77,7 +77,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Update UI to show pledger wallet
     if (notificationsEnabled) {
       toast.success("Pledger wallet funded", {
-        description: "Step 3/7: $1,500 USD added to pledger wallet"
+        description: "Step 3/10: $1,500 USD added to pledger wallet"
       });
     }
 
@@ -102,7 +102,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Show pending request in borrower app
     if (notificationsEnabled) {
       toast.info("Loan request submitted", {
-        description: "Step 3a/7: ₦300,000 request awaiting pledger approval"
+        description: "Step 3a/10: ₦300,000 request awaiting pledger approval"
       });
     }
 
@@ -114,7 +114,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Show locked funds in pledger app
     if (notificationsEnabled) {
       toast.info("Pledger collateral locked", {
-        description: "Step 3b/7: $300 USD collateral secured"
+        description: "Step 3b/10: $300 USD collateral secured"
       });
     }
 
@@ -126,7 +126,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Show approved status
     if (notificationsEnabled) {
       toast.success("Loan approved", {
-        description: "Step 3c/7: Request approved, preparing disbursement"
+        description: "Step 3c/10: Request approved, preparing disbursement"
       });
     }
 
@@ -141,7 +141,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Update UI to show loan and transactions
     if (notificationsEnabled) {
       toast.success("Historical loan disbursed", {
-        description: "Step 4/7: ₦300,000 transferred to borrower account"
+        description: "Step 4/10: ₦300,000 transferred to borrower account"
       });
     }
 
@@ -212,7 +212,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Show pending request
     if (notificationsEnabled) {
       toast.info("Current loan request submitted", {
-        description: "Step 4a/7: ₦400,000 request awaiting approval"
+        description: "Step 4a/10: ₦400,000 request awaiting approval"
       });
     }
 
@@ -224,7 +224,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Show locked funds
     if (notificationsEnabled) {
       toast.info("Pledger collateral secured", {
-        description: "Step 4b/7: $400 USD collateral locked"
+        description: "Step 4b/10: $400 USD collateral locked"
       });
     }
 
@@ -236,7 +236,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Show approved status
     if (notificationsEnabled) {
       toast.success("Current loan approved", {
-        description: "Step 4c/7: Active loan ready for disbursement"
+        description: "Step 4c/10: Active loan ready for disbursement"
       });
     }
 
@@ -251,7 +251,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Update UI to show active loan
     if (notificationsEnabled) {
       toast.success("Active loan disbursed", {
-        description: "Step 5/7: ₦400,000 working capital funded"
+        description: "Step 5/10: ₦400,000 working capital funded"
       });
     }
 
@@ -280,7 +280,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
 
     if (notificationsEnabled) {
       toast.success("Recent activity added", {
-        description: "Step 6/7: Banking transactions completed"
+        description: "Step 6/10: Banking transactions completed"
       });
     }
 
@@ -304,7 +304,7 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh(); // Update UI to show the payment
     if (notificationsEnabled) {
       toast.success("Loan payment made", {
-        description: `Step 6/8: First payment on active loan (₦${activeLoanInstallmentAmount.toLocaleString()})`
+        description: `Step 7/10: First payment on active loan (₦${activeLoanInstallmentAmount.toLocaleString()})`
       });
     }
 
@@ -332,8 +332,100 @@ export async function buildActivityHistoryProgressively(onRefresh: () => void, n
     onRefresh();
 
     if (notificationsEnabled) {
+      toast.info("Pending credit request added", {
+        description: "Step 8/10: Pending credit request added (awaiting approval)"
+      });
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1125));
+
+    // === STEP 9: Create Overdue Loan (Grace Period Demo) ===
+    // Create a short-term loan where payment was missed
+    console.log('⚠️ Step 9: Creating overdue loan (grace period)...');
+
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+    const threeWeeksAgo = new Date();
+    threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
+
+    // Create and approve a loan dated 3 weeks ago
+    const overdueLoan = addPendingRequest({
+      pledgerName: PLEDGER_NAME,
+      pledgerEmail: 'abimbola@email.com',
+      pledgerCountry: 'United Kingdom',
+      amount: 150000,  // ₦150K
+      term: '4 weeks',
+      submittedDate: threeWeeksAgo.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      purpose: 'Inventory restocking',
+      expectedInterestRate: 25.0,
+      repaymentFrequency: 'Weekly'
+    }, 'fresh');
+
+    lockFunds(overdueLoan.id, 150, 'fresh');  // $150 collateral
+    approvePendingRequest(overdueLoan.id, 'fresh');
+    addLoanDisbursementTransaction(overdueLoan.id, 150000, 'fresh', threeWeeksAgo);
+
+    // Trigger overdue detection (first weekly payment was due ~14 days ago)
+    detectOverdue(overdueLoan.id, 'fresh');
+    applyPenaltyInterest(overdueLoan.id, 'fresh');
+
+    onRefresh();
+
+    if (notificationsEnabled) {
+      toast.warning("Grace period triggered", {
+        description: "Step 9/10: Grace period triggered — payment overdue"
+      });
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1125));
+
+    // === STEP 10: Defaulted Loan (Seizure Demo) ===
+    console.log('🚨 Step 10: Creating defaulted loan (seizure)...');
+
+    const twoMonthsAgoDefault = new Date();
+    twoMonthsAgoDefault.setMonth(twoMonthsAgoDefault.getMonth() - 2);
+
+    const defaultedLoan = addPendingRequest({
+      pledgerName: PLEDGER_NAME,
+      pledgerEmail: 'abimbola@email.com',
+      pledgerCountry: 'United Kingdom',
+      amount: 100000,  // ₦100K
+      term: '4 weeks',
+      submittedDate: twoMonthsAgoDefault.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      purpose: 'Emergency funds',
+      expectedInterestRate: 25.0,
+      repaymentFrequency: 'Daily'
+    }, 'fresh');
+
+    lockFunds(defaultedLoan.id, 100, 'fresh');  // $100 collateral
+    approvePendingRequest(defaultedLoan.id, 'fresh');
+    addLoanDisbursementTransaction(defaultedLoan.id, 100000, 'fresh', twoMonthsAgoDefault);
+
+    // Make 2 payments then stop
+    const firstDefaultPayDate = new Date(twoMonthsAgoDefault);
+    firstDefaultPayDate.setDate(firstDefaultPayDate.getDate() + 1);
+    const firstDefaultTxn = addLoanRepaymentTransaction(defaultedLoan.id, defaultedLoan.installmentAmount, 'regular', 'fresh', firstDefaultPayDate);
+    if (firstDefaultTxn.success) {
+      processCreditPayment(defaultedLoan.id, defaultedLoan.installmentAmount, 'regular', firstDefaultTxn.transaction!.id, 'fresh');
+    }
+
+    const secondDefaultPayDate = new Date(firstDefaultPayDate);
+    secondDefaultPayDate.setDate(secondDefaultPayDate.getDate() + 1);
+    const secondDefaultTxn = addLoanRepaymentTransaction(defaultedLoan.id, defaultedLoan.installmentAmount, 'regular', 'fresh', secondDefaultPayDate);
+    if (secondDefaultTxn.success) {
+      processCreditPayment(defaultedLoan.id, defaultedLoan.installmentAmount, 'regular', secondDefaultTxn.transaction!.id, 'fresh');
+    }
+
+    // Trigger overdue then default
+    detectOverdue(defaultedLoan.id, 'fresh');
+    declareDefault(defaultedLoan.id, 'fresh');
+
+    onRefresh();
+
+    if (notificationsEnabled) {
       toast.success("Activity history completed!", {
-        description: "Step 8/8: Pending credit request added (awaiting approval)"
+        description: "Step 10/10: Loan defaulted — collateral seized"
       });
     }
 
