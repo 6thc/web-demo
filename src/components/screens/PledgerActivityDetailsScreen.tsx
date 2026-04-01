@@ -152,7 +152,7 @@ export function PledgerActivityDetailsScreen({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background page-enter">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
         <Button variant="ghost" size="icon" onClick={onBack}>

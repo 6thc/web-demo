@@ -27,7 +27,7 @@ export function SettingsScreen({ onBack, onResetToFreshUser, onPopulateWithActiv
   };
 
   return (
-    <div className="bg-muted/30 min-h-screen pt-2 pb-20">
+    <div className="bg-muted/30 min-h-screen pt-2 pb-20 page-enter">
       {/* Settings Header */}
       <div className="px-4 pt-8 pb-4">
         <div className="flex items-center justify-between mb-6">

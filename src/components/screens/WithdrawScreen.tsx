@@ -112,9 +112,9 @@ export function WithdrawScreen({ onBack, onSuccess, userState = 'active', notifi
   const quickAmounts = [50, 100, 250].filter(amt => amt <= currentBalance);
 
   return (
-    <div className="bg-muted/30 h-full pt-2 relative">
+    <div className="bg-muted/30 h-full pt-2 relative page-enter">
       {/* Dark Grey Background */}
-      <div className="absolute top-0 left-0 right-0 h-32 z-0" style={{ backgroundColor: '#3f3d56' }}></div>
+      <div className="absolute top-0 left-0 right-0 h-32 z-0 hero-gradient-pledger"></div>
       
       {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10">

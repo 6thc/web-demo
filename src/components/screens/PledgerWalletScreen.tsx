@@ -110,9 +110,9 @@ export function PledgerWalletScreen({
     .reduce((sum, a) => sum + (a.amount || 0), 0);
 
   return (
-    <div className="bg-muted/30 h-full pt-2 relative">
+    <div className="bg-muted/30 h-full pt-2 relative page-enter">
       {/* Dark Grey Background - cuts off behind wallet card */}
-      <div className="absolute top-0 left-0 right-0 h-52 z-0" style={{ backgroundColor: '#3f3d56' }}></div>
+      <div className="absolute top-0 left-0 right-0 h-52 z-0 hero-gradient-pledger"></div>
       
       {/* Header */}
       <div className="px-4 pt-8 pb-4 relative z-10">
@@ -135,7 +135,7 @@ export function PledgerWalletScreen({
         <PledgerWalletBalanceCard 
           key={refreshKey}
           userState={userState}
-          className="bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-lg relative z-10"
+          className="bg-white/[0.97] backdrop-blur-md border-0 text-foreground shadow-lg relative z-10"
         />
 
 
