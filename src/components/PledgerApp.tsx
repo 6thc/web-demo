@@ -7,6 +7,7 @@ import { PledgerTransactionHistoryScreen } from "./screens/PledgerTransactionHis
 import { TopUpScreen } from "./screens/TopUpScreen";
 import { WithdrawScreen } from "./screens/WithdrawScreen";
 import { PledgerActivityDetailsScreen } from "./screens/PledgerActivityDetailsScreen";
+import { CollateralSeizureScreen } from "./screens/CollateralSeizureScreen";
 import { PledgerBottomNav } from "./PledgerBottomNav";
 import { Toaster } from "./ui/sonner";
 import { toast } from "sonner@2.0.3";
@@ -37,6 +38,8 @@ export function PledgerApp({ userState, refreshKey, onRefresh, forceTab, forceCh
   const [showActivityHistory, setShowActivityHistory] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+  const [showSeizure, setShowSeizure] = useState(false);
+  const [seizureCreditId, setSeizureCreditId] = useState<string | null>(null);
   const [localRefreshKey, setLocalRefreshKey] = useState(0);
 
   // Initialize wallet state when userState changes
@@ -134,6 +137,17 @@ export function PledgerApp({ userState, refreshKey, onRefresh, forceTab, forceCh
     setShowActivityHistory(false);
   };
 
+  const handleSeizureClick = (creditId: string) => {
+    setSeizureCreditId(creditId);
+    setShowSeizure(true);
+    setSelectedRequestId(null);
+  };
+
+  const handleBackFromSeizure = () => {
+    setShowSeizure(false);
+    setSeizureCreditId(null);
+  };
+
   const handleSettings = () => {
     if (notificationsEnabled) {
       toast.info("Settings", {
@@ -143,6 +157,17 @@ export function PledgerApp({ userState, refreshKey, onRefresh, forceTab, forceCh
   };
 
   const renderCurrentScreen = () => {
+    // Show collateral seizure screen
+    if (showSeizure && seizureCreditId) {
+      return (
+        <CollateralSeizureScreen
+          creditId={seizureCreditId}
+          onBack={handleBackFromSeizure}
+          userState={userState}
+        />
+      );
+    }
+
     // Show activity details if an activity is selected (prioritize over activity history)
     if (selectedActivityId) {
       return (
@@ -270,7 +295,7 @@ export function PledgerApp({ userState, refreshKey, onRefresh, forceTab, forceCh
         {renderCurrentScreen()}
       </main>
       
-      {!showTopUp && !showWithdraw && !showActivityHistory && !selectedRequestId && !selectedActivityId && (
+      {!showTopUp && !showWithdraw && !showActivityHistory && !selectedRequestId && !selectedActivityId && !showSeizure && (
         <PledgerBottomNav 
           activeTab={activeTab} 
           onTabChange={setActiveTab} 

@@ -1,4 +1,4 @@
-import { ArrowLeft, User, Calendar, DollarSign, Clock, CheckCircle, AlertTriangle, Shield, Phone, Mail, MapPin, Share, Download, Copy, CreditCard, TrendingUp, History, X } from "lucide-react";
+import { ArrowLeft, User, Calendar, DollarSign, Clock, CheckCircle, AlertTriangle, Shield, ShieldAlert, Phone, Mail, MapPin, Share, Download, Copy, CreditCard, TrendingUp, History, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { getCreditById, formatCurrency, calculatePaymentProgress, getRemainingPayments, processCreditPayment, type PaymentRecord } from "../data/credits";
 import { addLoanRepaymentTransaction } from "../data/transactions";
 import { PaymentModal } from "../PaymentModal";
+import { GraceAlertBanner } from "../GraceAlertBanner";
 import { toast } from "sonner@2.0.3";
 import { useState } from "react";
 
@@ -19,9 +20,10 @@ interface CreditDetailsScreenProps {
   userState?: 'fresh' | 'active';
   onPaymentSuccess?: () => void;
   defaultTab?: 'overview' | 'pledger' | 'payments';
+  onDefaultNotice?: (creditId: string) => void;
 }
 
-export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onViewAllPayments, userState = 'active', onPaymentSuccess, defaultTab = 'overview' }: CreditDetailsScreenProps) {
+export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onViewAllPayments, userState = 'active', onPaymentSuccess, defaultTab = 'overview', onDefaultNotice }: CreditDetailsScreenProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [credit, setCredit] = useState(() => getCreditById(creditId, userState));
 
@@ -49,10 +51,12 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
         return <CheckCircle className="h-5 w-5 text-green-600" />;
       case "pending":
         return <Clock className="h-5 w-5 text-orange-600" />;
+      case "overdue":
+        return <AlertTriangle className="h-5 w-5 text-amber-600" />;
       case "cancelled":
         return <X className="h-5 w-5 text-red-600" />;
       case "defaulted":
-        return <AlertTriangle className="h-5 w-5 text-red-600" />;
+        return <ShieldAlert className="h-5 w-5 text-red-600" />;
       default:
         return <Clock className="h-5 w-5" />;
     }
@@ -68,6 +72,8 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
         return <Badge variant="secondary" className="bg-orange-100 text-orange-700">Pending</Badge>;
       case "reviewing":
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">Under Review</Badge>;
+      case "overdue":
+        return <Badge className="bg-amber-100 text-amber-700">Overdue</Badge>;
       case "cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       case "defaulted":
@@ -200,13 +206,15 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
           <CardContent className="p-6">
             <div className="text-center">
               <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
-                credit.status === 'active' 
-                  ? 'bg-blue-100' 
+                credit.status === 'active'
+                  ? 'bg-blue-100'
                   : credit.status === 'completed'
                     ? 'bg-green-100'
-                    : credit.status === 'cancelled'
+                    : credit.status === 'cancelled' || credit.status === 'defaulted'
                       ? 'bg-red-100'
-                      : 'bg-orange-100'
+                      : credit.status === 'overdue'
+                        ? 'bg-amber-100'
+                        : 'bg-orange-100'
               }`}>
                 {getStatusIcon()}
               </div>
@@ -227,7 +235,7 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
                 )}
               </div>
 
-              {credit.status === 'active' && (
+              {(credit.status === 'active' || credit.status === 'overdue') && (
                 <div className="bg-muted/50 rounded-lg p-4">
                   <div className="flex justify-between text-sm mb-2">
                     <span>Payment Progress</span>
@@ -249,6 +257,44 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
             </div>
           </CardContent>
         </Card>
+
+        {/* Grace Period Alert */}
+        {credit.status === 'overdue' && (
+          <GraceAlertBanner
+            credit={credit}
+            onMakePayment={() => setShowPaymentModal(true)}
+          />
+        )}
+
+        {/* Defaulted Settlement Summary */}
+        {credit.status === 'defaulted' && credit.settlement && (
+          <Card className="mb-4 border-red-200 bg-red-50">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldAlert className="h-5 w-5 text-red-600" />
+                <h3 className="font-semibold text-sm text-red-800">Loan Defaulted — Settlement Applied</h3>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-red-700">Collateral Seized</span>
+                <span className="font-semibold text-red-700">{formatCurrency(credit.settlement.totalSeized)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-red-700">Outstanding Balance</span>
+                <span className="font-semibold text-red-700">{formatCurrency(credit.settlement.outstandingDebt)}</span>
+              </div>
+              {onDefaultNotice && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2 border-red-300 text-red-700 hover:bg-red-100"
+                  onClick={() => onDefaultNotice(credit.id)}
+                >
+                  View Default Notice
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue={defaultTab} className="w-full">
@@ -398,7 +444,7 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
                   </div>
                 </div>
 
-                {credit.status === 'active' && (
+                {(credit.status === 'active' || credit.status === 'overdue') && (
                   <>
                     <Separator />
                     <div className="grid grid-cols-2 gap-4">
@@ -598,14 +644,15 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
             </Card>
 
             {/* Quick Actions */}
-            {credit.status === 'active' && (
+            {(credit.status === 'active' || credit.status === 'overdue') && (
               <div>
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
+                  variant={credit.status === 'overdue' ? 'destructive' : 'default'}
                   onClick={() => setShowPaymentModal(true)}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Make Payment
+                  {credit.status === 'overdue' ? 'Make Payment Now' : 'Make Payment'}
                 </Button>
               </div>
             )}
@@ -614,7 +661,7 @@ export function CreditDetailsScreen({ creditId, onBack, onViewTransaction, onVie
       </div>
 
       {/* Payment Modal */}
-      {credit.status === 'active' && (
+      {(credit.status === 'active' || credit.status === 'overdue') && (
         <PaymentModal
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}

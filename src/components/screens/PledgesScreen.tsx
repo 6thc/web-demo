@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Banknote, CheckCircle2, Clock, AlertCircle, Calendar, Settings, User, History, X } from "lucide-react";
+import { Shield, Banknote, CheckCircle2, Clock, AlertCircle, AlertTriangle, Calendar, Settings, User, History, X, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -25,8 +25,8 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
     credit.status === 'pending' || credit.status === 'reviewing'
   );
   
-  const activeCollateral = allCredits.filter(credit => 
-    credit.status === 'active'
+  const activeCollateral = allCredits.filter(credit =>
+    credit.status === 'active' || credit.status === 'overdue'
   );
   
   const pastCollateral = allCredits.filter(credit => 
@@ -59,29 +59,35 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
           color: 'bg-accent/10 text-accent border-accent/20',
           icon: Shield 
         };
+      case 'overdue':
+        return {
+          label: 'Overdue',
+          color: 'bg-amber-100 text-amber-700 border-amber-200',
+          icon: AlertTriangle
+        };
       case 'completed':
-        return { 
-          label: 'Completed', 
+        return {
+          label: 'Completed',
           color: 'bg-muted/50 text-muted-foreground border-muted',
-          icon: CheckCircle2 
+          icon: CheckCircle2
         };
       case 'cancelled':
-        return { 
-          label: 'Cancelled', 
+        return {
+          label: 'Cancelled',
           color: 'bg-muted/50 text-muted-foreground border-muted',
-          icon: AlertCircle 
+          icon: AlertCircle
         };
       case 'defaulted':
-        return { 
-          label: 'Defaulted', 
+        return {
+          label: 'Defaulted',
           color: 'bg-destructive/10 text-destructive border-destructive/20',
-          icon: AlertCircle 
+          icon: ShieldAlert
         };
       default:
-        return { 
-          label: status, 
+        return {
+          label: status,
           color: 'bg-muted/50 text-muted-foreground border-muted',
-          icon: Shield 
+          icon: Shield
         };
     }
   };
@@ -107,6 +113,12 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
           label: 'Released',
           icon: CheckCircle2
         };
+      case 'overdue':
+        return {
+          color: 'bg-amber-100 text-amber-700 border-amber-200',
+          label: 'Overdue',
+          icon: AlertTriangle
+        };
       case 'cancelled':
         return {
           color: 'bg-red-100 text-red-700 border-red-200',
@@ -116,8 +128,8 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
       case 'defaulted':
         return {
           color: 'bg-red-100 text-red-700 border-red-200',
-          label: 'Defaulted',
-          icon: AlertCircle
+          label: 'Seized',
+          icon: ShieldAlert
         };
       default:
         return {
@@ -300,8 +312,17 @@ export function PledgesScreen({ userState, refreshKey, onRequestClick, onSetting
                           <p className="text-xs text-muted-foreground">{collateral.completedDate || collateral.submittedDate}</p>
                         </div>
                       </div>
+                      {collateral.status === 'defaulted' && collateral.settlement && (
+                        <div className="mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center justify-between">
+                          <span className="text-xs text-red-700 font-medium flex items-center gap-1.5">
+                            <ShieldAlert className="h-3.5 w-3.5" />
+                            Collateral Seized
+                          </span>
+                          <span className="text-xs font-semibold text-red-700">{formatUSD(collateral.settlement.totalSeized)}</span>
+                        </div>
+                      )}
                     </button>
-                    
+
                     {index < pastCollateral.length - 1 && <Separator className="mt-4" />}
                   </div>
                 ))}

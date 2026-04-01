@@ -11,6 +11,7 @@ import { ReceiveMoneyScreen } from "./screens/ReceiveMoneyScreen";
 import { CashScreen } from "./screens/CashScreen";
 import { WalletScreen } from "./screens/WalletScreen";
 import { TransferScreen } from "./screens/TransferScreen";
+import { DefaultNoticeScreen } from "./screens/DefaultNoticeScreen";
 import { Toaster } from "./ui/sonner";
 import { toast } from "sonner@2.0.3";
 import { approveAllPendingRequests, declineAllPendingRequests } from "./data/credits";
@@ -48,6 +49,8 @@ export function BorrowerApp({ userState, refreshKey, onRefresh, onUserStateChang
   const [showReceiveMoney, setShowReceiveMoney] = useState(false);
   const [showCash, setShowCash] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showDefaultNotice, setShowDefaultNotice] = useState(false);
+  const [defaultNoticeCreditId, setDefaultNoticeCreditId] = useState<string | null>(null);
 
   const handleCreateRequest = () => {
     setShowCreateRequest(true);
@@ -155,6 +158,18 @@ export function BorrowerApp({ userState, refreshKey, onRefresh, onUserStateChang
     setShowTransfer(false);
   };
 
+  const handleDefaultNotice = (creditId: string) => {
+    setDefaultNoticeCreditId(creditId);
+    setShowDefaultNotice(true);
+    setSelectedCreditId(null);
+  };
+
+  const handleBackFromDefaultNotice = () => {
+    setShowDefaultNotice(false);
+    setSelectedCreditId(defaultNoticeCreditId);
+    setDefaultNoticeCreditId(null);
+  };
+
   const handleCashTransaction = (type: 'withdraw' | 'deposit', amount: number) => {
     const result = addCashTransaction(type, amount, userState);
 
@@ -254,6 +269,16 @@ export function BorrowerApp({ userState, refreshKey, onRefresh, onUserStateChang
       );
     }
 
+    if (showDefaultNotice && defaultNoticeCreditId) {
+      return (
+        <DefaultNoticeScreen
+          creditId={defaultNoticeCreditId}
+          onBack={handleBackFromDefaultNotice}
+          userState={userState}
+        />
+      );
+    }
+
     if (selectedTransactionId) {
       return (
         <TransactionDetailsScreen
@@ -275,6 +300,7 @@ export function BorrowerApp({ userState, refreshKey, onRefresh, onUserStateChang
           userState={userState}
           onPaymentSuccess={onRefresh}
           defaultTab={creditDetailsTab}
+          onDefaultNotice={handleDefaultNotice}
         />
       );
     }
@@ -365,7 +391,7 @@ export function BorrowerApp({ userState, refreshKey, onRefresh, onUserStateChang
         {renderCurrentScreen()}
       </main>
 
-      {!showCreateRequest && !showTransactionHistory && !selectedTransactionId && !selectedCreditId && !showPaymentHistory && !showReceiveMoney && !showCash && !showTransfer && (
+      {!showCreateRequest && !showTransactionHistory && !selectedTransactionId && !selectedCreditId && !showPaymentHistory && !showReceiveMoney && !showCash && !showTransfer && !showDefaultNotice && (
         <BottomNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
