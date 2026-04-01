@@ -118,7 +118,7 @@ export function CreditCarousel({ credits, onCreditClick, onNavigateToCredit }: C
                 }`}
               >
                 <Card 
-                  className="bg-card border cursor-pointer hover:shadow-sm transition-shadow h-full"
+                  className="bg-card border cursor-pointer shadow-sm hover:shadow-md transition-shadow active:scale-[0.98] h-full"
                   onClick={() => onCreditClick?.(credit.id)}
                 >
                   <CardContent className="p-3 h-full">
